@@ -1,6 +1,8 @@
 import Users from "../models/users.model";
 //const bcrypt = require("bcryptjs");
 import bcrypt from "bcryptjs/dist/bcrypt";
+import jwt from "jsonwebtoken";
+import cnfg from "../config/cnfg";
 
 export const signIn = async (req, res) => {
     const { username, password } = req.body;
@@ -20,8 +22,12 @@ export const signIn = async (req, res) => {
                 });
             }
             else{
-                res.json({
-                    message: data.username
+
+                const token = jwt.sign({username: username}, cnfg.secret, {
+                    expiresIn: 86400
+                });
+                res.status(200).json({
+                    token: token
                 });
             }
         }
@@ -107,9 +113,13 @@ export const deleteUser = async (req, res) => {
 export const updatedUser = async (req, res) => {
     const { id } = req.params;
     const { username, password, rol, type } = req.body; 
+
+
+    const salt = await bcrypt.genSalt(10);
+    const hasedPs = await bcrypt.hash(password, salt)
     await Users.update({
         username, 
-        password, 
+        password: hasedPs, 
         rol, 
         type
     }, {where: { id }}).then(data => {
