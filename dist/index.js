@@ -21,10 +21,10 @@ function _main() {
         switch (_context.prev = _context.next) {
           case 0:
             _context.next = 2;
-            return _app["default"].listen(8080);
+            return _app["default"].listen(3030);
 
           case 2:
-            console.log("Server on port 8080");
+            console.log("Server on port 3030");
 
           case 3:
           case "end":

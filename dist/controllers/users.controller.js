@@ -3,13 +3,15 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.create = create;
-exports.deleteUser = deleteUser;
-exports.getAll = getAll;
-exports.getOne = getOne;
-exports.updatedUser = updatedUser;
+exports.updatedUser = exports.signIn = exports.getOne = exports.getAll = exports.deleteUser = exports.create = void 0;
 
 var _users = _interopRequireDefault(require("../models/users.model"));
+
+var _bcrypt = _interopRequireDefault(require("bcryptjs/dist/bcrypt"));
+
+var _jsonwebtoken = _interopRequireDefault(require("jsonwebtoken"));
+
+var _cnfg = _interopRequireDefault(require("../config/cnfg"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -17,59 +19,115 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-function getAll(_x, _x2) {
-  return _getAll.apply(this, arguments);
-}
+var signIn = /*#__PURE__*/function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(req, res) {
+    var _req$body, username, password;
 
-function _getAll() {
-  _getAll = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(req, res) {
-    var users;
     return regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
-            _context.prev = 0;
-            _context.next = 3;
+            _req$body = req.body, username = _req$body.username, password = _req$body.password;
+
+            _users["default"].findOne({
+              where: {
+                username: username
+              }
+            }).then(function (data) {
+              if (!data) {
+                return res.status(404).json({
+                  message: 'User dont found'
+                });
+              } else {
+                var validate = _bcrypt["default"].compareSync(password, data.password);
+
+                if (!validate) {
+                  return res.status(401).json({
+                    message: 'Invalid Password'
+                  });
+                } else {
+                  var token = _jsonwebtoken["default"].sign({
+                    username: username
+                  }, _cnfg["default"].secret, {
+                    expiresIn: 86400
+                  });
+
+                  res.status(200).json({
+                    token: token
+                  });
+                }
+              }
+            })["catch"](function (err) {
+              res.status(500).json({
+                message: 'Interal Error'
+              });
+            });
+
+          case 2:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+
+  return function signIn(_x, _x2) {
+    return _ref.apply(this, arguments);
+  };
+}();
+
+exports.signIn = signIn;
+
+var getAll = /*#__PURE__*/function () {
+  var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(req, res) {
+    var users;
+    return regeneratorRuntime.wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            _context2.prev = 0;
+            _context2.next = 3;
             return _users["default"].findAll();
 
           case 3:
-            users = _context.sent;
+            users = _context2.sent;
             res.json({
               data: users
             });
-            _context.next = 10;
+            _context2.next = 10;
             break;
 
           case 7:
-            _context.prev = 7;
-            _context.t0 = _context["catch"](0);
+            _context2.prev = 7;
+            _context2.t0 = _context2["catch"](0);
             res.status(500).json({
               message: 'Users table is empty'
             });
 
           case 10:
           case "end":
-            return _context.stop();
+            return _context2.stop();
         }
       }
-    }, _callee, null, [[0, 7]]);
+    }, _callee2, null, [[0, 7]]);
   }));
-  return _getAll.apply(this, arguments);
-}
 
-function getOne(_x3, _x4) {
-  return _getOne.apply(this, arguments);
-}
+  return function getAll(_x3, _x4) {
+    return _ref2.apply(this, arguments);
+  };
+}();
 
-function _getOne() {
-  _getOne = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(req, res) {
+exports.getAll = getAll;
+
+var getOne = /*#__PURE__*/function () {
+  var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(req, res) {
     var id, user;
-    return regeneratorRuntime.wrap(function _callee2$(_context2) {
+    return regeneratorRuntime.wrap(function _callee3$(_context3) {
       while (1) {
-        switch (_context2.prev = _context2.next) {
+        switch (_context3.prev = _context3.next) {
           case 0:
             id = req.params.id;
-            _context2.next = 3;
+            _context3.next = 3;
             return _users["default"].findOne({
               where: {
                 id: id
@@ -77,93 +135,105 @@ function _getOne() {
             });
 
           case 3:
-            user = _context2.sent;
+            user = _context3.sent;
             res.json({
               data: user
             });
 
           case 5:
           case "end":
-            return _context2.stop();
+            return _context3.stop();
         }
       }
-    }, _callee2);
+    }, _callee3);
   }));
-  return _getOne.apply(this, arguments);
-}
 
-function create(_x5, _x6) {
-  return _create.apply(this, arguments);
-}
+  return function getOne(_x5, _x6) {
+    return _ref3.apply(this, arguments);
+  };
+}();
 
-function _create() {
-  _create = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(req, res) {
-    var _req$body, username, password, rol, type, newUser;
+exports.getOne = getOne;
 
-    return regeneratorRuntime.wrap(function _callee3$(_context3) {
+var create = /*#__PURE__*/function () {
+  var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(req, res) {
+    var _req$body2, username, password, rol, type, salt, hasedPs, newUser;
+
+    return regeneratorRuntime.wrap(function _callee4$(_context4) {
       while (1) {
-        switch (_context3.prev = _context3.next) {
+        switch (_context4.prev = _context4.next) {
           case 0:
-            _req$body = req.body, username = _req$body.username, password = _req$body.password, rol = _req$body.rol, type = _req$body.type;
-            _context3.prev = 1;
-            _context3.next = 4;
+            _req$body2 = req.body, username = _req$body2.username, password = _req$body2.password, rol = _req$body2.rol, type = _req$body2.type;
+            _context4.prev = 1;
+            _context4.next = 4;
+            return _bcrypt["default"].genSalt(10);
+
+          case 4:
+            salt = _context4.sent;
+            _context4.next = 7;
+            return _bcrypt["default"].hash(req.body.password, salt);
+
+          case 7:
+            hasedPs = _context4.sent;
+            _context4.next = 10;
             return _users["default"].create({
               username: username,
-              password: password,
+              password: hasedPs,
               rol: rol,
               type: type
             }, {
               fields: ['username', 'password', 'rol', 'type']
             });
 
-          case 4:
-            newUser = _context3.sent;
+          case 10:
+            newUser = _context4.sent;
 
             if (!newUser) {
-              _context3.next = 7;
+              _context4.next = 13;
               break;
             }
 
-            return _context3.abrupt("return", res.json({
+            return _context4.abrupt("return", res.status(201).json({
               message: 'User created',
               data: newUser
             }));
 
-          case 7:
-            _context3.next = 13;
+          case 13:
+            _context4.next = 19;
             break;
 
-          case 9:
-            _context3.prev = 9;
-            _context3.t0 = _context3["catch"](1);
-            console.log(_context3.t0);
+          case 15:
+            _context4.prev = 15;
+            _context4.t0 = _context4["catch"](1);
+            console.log(_context4.t0);
             res.status(500).json({
               message: 'User dont created'
             });
 
-          case 13:
+          case 19:
           case "end":
-            return _context3.stop();
+            return _context4.stop();
         }
       }
-    }, _callee3, null, [[1, 9]]);
+    }, _callee4, null, [[1, 15]]);
   }));
-  return _create.apply(this, arguments);
-}
 
-function deleteUser(_x7, _x8) {
-  return _deleteUser.apply(this, arguments);
-}
+  return function create(_x7, _x8) {
+    return _ref4.apply(this, arguments);
+  };
+}();
 
-function _deleteUser() {
-  _deleteUser = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(req, res) {
+exports.create = create;
+
+var deleteUser = /*#__PURE__*/function () {
+  var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(req, res) {
     var id;
-    return regeneratorRuntime.wrap(function _callee4$(_context4) {
+    return regeneratorRuntime.wrap(function _callee5$(_context5) {
       while (1) {
-        switch (_context4.prev = _context4.next) {
+        switch (_context5.prev = _context5.next) {
           case 0:
             id = req.params.id;
-            _context4.next = 3;
+            _context5.next = 3;
             return _users["default"].destroy({
               where: {
                 id: id
@@ -182,32 +252,43 @@ function _deleteUser() {
 
           case 3:
           case "end":
-            return _context4.stop();
+            return _context5.stop();
         }
       }
-    }, _callee4);
+    }, _callee5);
   }));
-  return _deleteUser.apply(this, arguments);
-}
 
-function updatedUser(_x9, _x10) {
-  return _updatedUser.apply(this, arguments);
-}
+  return function deleteUser(_x9, _x10) {
+    return _ref5.apply(this, arguments);
+  };
+}();
 
-function _updatedUser() {
-  _updatedUser = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(req, res) {
-    var id, _req$body2, username, password, rol, type;
+exports.deleteUser = deleteUser;
 
-    return regeneratorRuntime.wrap(function _callee5$(_context5) {
+var updatedUser = /*#__PURE__*/function () {
+  var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(req, res) {
+    var id, _req$body3, username, password, rol, type, salt, hasedPs;
+
+    return regeneratorRuntime.wrap(function _callee6$(_context6) {
       while (1) {
-        switch (_context5.prev = _context5.next) {
+        switch (_context6.prev = _context6.next) {
           case 0:
             id = req.params.id;
-            _req$body2 = req.body, username = _req$body2.username, password = _req$body2.password, rol = _req$body2.rol, type = _req$body2.type;
-            _context5.next = 4;
+            _req$body3 = req.body, username = _req$body3.username, password = _req$body3.password, rol = _req$body3.rol, type = _req$body3.type;
+            _context6.next = 4;
+            return _bcrypt["default"].genSalt(10);
+
+          case 4:
+            salt = _context6.sent;
+            _context6.next = 7;
+            return _bcrypt["default"].hash(password, salt);
+
+          case 7:
+            hasedPs = _context6.sent;
+            _context6.next = 10;
             return _users["default"].update({
               username: username,
-              password: password,
+              password: hasedPs,
               rol: rol,
               type: type
             }, {
@@ -229,12 +310,17 @@ function _updatedUser() {
               });
             });
 
-          case 4:
+          case 10:
           case "end":
-            return _context5.stop();
+            return _context6.stop();
         }
       }
-    }, _callee5);
+    }, _callee6);
   }));
-  return _updatedUser.apply(this, arguments);
-}
+
+  return function updatedUser(_x11, _x12) {
+    return _ref6.apply(this, arguments);
+  };
+}();
+
+exports.updatedUser = updatedUser;
